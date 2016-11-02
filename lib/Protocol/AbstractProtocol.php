@@ -151,15 +151,17 @@ abstract class AbstractProtocol
             $buf = '';
             $resp = '';
 
-            while(strpos($resp, self::CRLF) === false) {
+            stream_set_timeout($this->_socket, 10);
+            $resp = $buf = fgets($this->_socket, 512);
+            
+            while(strpos($resp, self::CRLF) === false && !empty($resp)) {
                 $buf = fgets($this->_socket, 512);
-
-                if ($buf === false) {
-                    $this->close();
-                    throw new Protocol\Exception("Failed to read resp from the socket.");
-                }
-
                 $resp .= $buf;
+            }
+            
+            if ($buf === false) {
+                $this->close();
+                throw new Protocol\Exception("Failed to read resp from the socket.");
             }
 
             if ($trim === false) {
